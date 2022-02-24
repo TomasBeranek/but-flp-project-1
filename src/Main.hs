@@ -2,17 +2,25 @@ import System.Environment (getArgs)
 import System.Exit (exitWith, ExitCode(ExitSuccess), ExitCode(ExitFailure))
 import System.IO (hPutStrLn, stderr)
 import Debug.Trace (trace)
+import Data.List (elemIndex, sort)
+import Data.Maybe (fromJust)
 
 data GrammarType = GrammarType {  nonTerminals :: [Char],
                   terminals :: [Char],
                   startingSymbol  :: Char,
                   rules :: [(Char,[Char])] }
 
+data NFSM = NFSM {  states :: [Int],
+                    alphabet :: [Char],
+                    transitions  :: [(Int,Char,Int)],
+                    startState :: Int,
+                    finalStates :: [Int] }
+
 main = getArgs >>= parseArgs
 
 loadRLG str = createRLG (lines str)
 
-createRLG xs = GrammarType {  nonTerminals =  myUnique (removeChar ',' (xs !! 0)),
+createRLG xs = GrammarType {  nonTerminals =  sort (myUnique (removeChar ',' (xs !! 0))),
                               terminals = myUnique (removeChar ',' (xs !! 1)),
                               startingSymbol = (xs !! 2) !! 0,
                               rules = myUnique (map parseRule (drop 3 xs)) }
@@ -38,8 +46,8 @@ removeRightArrow (x:xs) = [x] ++ removeRightArrow(xs)
 
 createRule xs = ((xs !! 0) !! 0, xs !! 1)
 
-convertToRRG rlg = GrammarType {  nonTerminals =  x,
-                                  terminals = terminals rlg,
+convertToRRG rlg = GrammarType {  nonTerminals =  sort x,
+                                  terminals = sort (terminals rlg),
                                   startingSymbol = startingSymbol rlg,
                                   rules = y }
                  where (x,y) = splitRLGRules (nonTerminals rlg) (rules rlg)
@@ -79,9 +87,33 @@ getFreeNonTerminal existingNT (possibleNT:nts) = if possibleNT `elem` existingNT
                                                   then getFreeNonTerminal existingNT nts
                                                   else possibleNT
 
-convertToNFSM rlg = rlg
+convertToNFSM rrg = NFSM {  states = renameNonTerminals (nonTerminals rrg) (nonTerminals rrg),
+                            alphabet = terminals rrg,
+                            transitions = createTransitions (nonTerminals rrg) (rules rrg),
+                            startState = fromJust $ elemIndex (startingSymbol rrg) (nonTerminals rrg),
+                            finalStates = createFinalStates (nonTerminals rrg) (rules rrg) }
 
-printNFSM x = putStrLn "TBD"
+renameNonTerminals _ [] = []
+renameNonTerminals allNonTerminals (nt:nts) = (fromJust $ elemIndex nt allNonTerminals):renameNonTerminals allNonTerminals nts
+
+createTransitions _ [] = []
+createTransitions allNonTerminals (r:rs) = if snd r == "#"
+                                              then createTransitions allNonTerminals rs
+                                              else (startState, symbol, endState):(createTransitions allNonTerminals rs)
+                                           where startState = fromJust $ elemIndex (fst r) allNonTerminals
+                                                 symbol = head (snd r)
+                                                 endState = fromJust $ elemIndex (last (snd r)) allNonTerminals
+
+createFinalStates _ [] = []
+createFinalStates allNonTerminals (r:rs) = if snd r == "#"
+                                            then (fromJust $ elemIndex (fst r) allNonTerminals):(createFinalStates allNonTerminals rs)
+                                            else createFinalStates allNonTerminals rs
+
+printNFSM nfsm = putStrLn ("states: " ++ show (states nfsm)) >>
+                 putStrLn ("alphabet: " ++ show (alphabet nfsm)) >>
+                 putStrLn ("transitions: " ++ show (transitions nfsm)) >>
+                 putStrLn ("startState: " ++ show (startState nfsm)) >>
+                 putStrLn ("finalStates: " ++ show (finalStates nfsm))
 
 printGrammar rlg = putStrLn ("nonTerminals: " ++ show (nonTerminals rlg)) >>
                putStrLn ("terminals: " ++ show (terminals rlg)) >>
