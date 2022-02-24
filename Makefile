@@ -17,3 +17,6 @@ clean:
 
 zip: clean
 	zip -r flp-fun-xberan46.zip Makefile src/ doc/ test/
+
+lint:
+	hlint $(SRC_DIR)
