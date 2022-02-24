@@ -1,22 +1,21 @@
 import System.Environment (getArgs)
 import System.Exit (exitWith, ExitCode(ExitSuccess), ExitCode(ExitFailure))
 import System.IO (hPutStrLn, stderr)
+import Debug.Trace (trace)
 
-data RLG = RLG
-  { nonTerminals :: [Char]
-  , terminals :: [Char]
-  , startingSymbol  :: Char
-  , rules :: [(Char,[Char])]
-  }
+data GrammarType = GrammarType {  nonTerminals :: [Char],
+                  terminals :: [Char],
+                  startingSymbol  :: Char,
+                  rules :: [(Char,[Char])] }
 
 main = getArgs >>= parseArgs
 
 loadRLG str = createRLG (lines str)
 
-createRLG xs = RLG{ nonTerminals =  myUnique (removeChar ',' (xs !! 0)),
-                    terminals = myUnique (removeChar ',' (xs !! 1)),
-                    startingSymbol = (xs !! 2) !! 0,
-                    rules = myUnique (map parseRule (drop 3 xs))}
+createRLG xs = GrammarType {  nonTerminals =  myUnique (removeChar ',' (xs !! 0)),
+                              terminals = myUnique (removeChar ',' (xs !! 1)),
+                              startingSymbol = (xs !! 2) !! 0,
+                              rules = myUnique (map parseRule (drop 3 xs)) }
 
 removeChar c str = concat (mySplitOn ',' str)
 
@@ -39,15 +38,44 @@ removeRightArrow (x:xs) = [x] ++ removeRightArrow(xs)
 
 createRule xs = ((xs !! 0) !! 0, xs !! 1)
 
-convertToNFSM x = x
+convertToRRG rlg = GrammarType {  nonTerminals =  x,
+                                  terminals = terminals rlg,
+                                  startingSymbol = startingSymbol rlg,
+                                  rules = y }
+                 where (x,y) = splitRLGRules (nonTerminals rlg) (rules rlg)
+
+splitRLGRules nonTerminals [] = ("XY", [('X', "uX")])
+splitRLGRules nonTerminals (rule:rs) = if ruleIsRRG (snd rule)  --
+                                          then trace ("Is RRG") splitRLGRules nonTerminals rs
+
+                                          --(nonTerminals ++ x, [rule] ++ y)
+                                          else trace ("Not RRG") splitRLGRules nonTerminals rs
+                                          --(nonTerminals ++ x, (spliteSingleRLGRule rule) ++ y)
+                                       --where (x,y) = splitRLGRules nonTerminals rs
+
+ruleIsRRG ruleRightSide = if  ruleRightSide == "#"
+                              || ((length ruleRightSide == 2)
+                                  && ((ruleRightSide !! 0) `elem` ['a'..'z'])
+                                  && ((ruleRightSide !! 1) `elem` ['A'..'Z']))
+                            then True
+                            else False
+
+spliteSingleRLGRule rule = rule
+
+
+convertToNFSM rlg = rlg
+
+
 printNFSM x = putStrLn "TBD"
-convertToRRG x = x
-printRLG rlg = putStrLn ("nonTerminals: " ++ show (nonTerminals rlg)) >>
+
+printGrammar rlg = putStrLn ("nonTerminals: " ++ show (nonTerminals rlg)) >>
                putStrLn ("terminals: " ++ show (terminals rlg)) >>
                putStrLn ("startingSymbol: " ++ show (startingSymbol rlg)) >>
                putStrLn ("rules: " ++ show (rules rlg))
 
-printRRG x = putStrLn "TBD"
+printRLG rlg = printGrammar rlg
+
+printRRG rrg = printGrammar rrg
 
 parseArgs ("-i":xs) = hPutStrLn stderr "DEBUG: Print RLG" >> loadInput xs >>= printRLG . loadRLG >> exit
 parseArgs ("-1":xs) = hPutStrLn stderr "DEBUG: Print RRG" >> loadInput xs >>= printRRG . convertToRRG . loadRLG  >> exit
