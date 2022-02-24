@@ -44,14 +44,12 @@ convertToRRG rlg = GrammarType {  nonTerminals =  x,
                                   rules = y }
                  where (x,y) = splitRLGRules (nonTerminals rlg) (rules rlg)
 
-splitRLGRules nonTerminals [] = ("XY", [('X', "uX")])
-splitRLGRules nonTerminals (rule:rs) = if ruleIsRRG (snd rule)  --
-                                          then trace ("Is RRG") splitRLGRules nonTerminals rs
-
-                                          --(nonTerminals ++ x, [rule] ++ y)
-                                          else trace ("Not RRG") splitRLGRules nonTerminals rs
-                                          --(nonTerminals ++ x, (spliteSingleRLGRule rule) ++ y)
-                                       --where (x,y) = splitRLGRules nonTerminals rs
+splitRLGRules nonTerminals [] = (nonTerminals, [])
+splitRLGRules nonTerminals (rule:rs) = if ruleIsRRG (snd rule)  --ruleIsRRG only needs the right side of the rule
+                                          then (restOfNonRerminals, [rule] ++ restOfRules)
+                                          else (allNonTerminals, restOfRules ++ newRules)
+                                       where  (restOfNonRerminals, restOfRules) = splitRLGRules nonTerminals rs
+                                              (allNonTerminals, newRules) = splitSingleRLGRule restOfNonRerminals rule
 
 ruleIsRRG ruleRightSide = if  ruleRightSide == "#"
                               || ((length ruleRightSide == 2)
@@ -60,11 +58,28 @@ ruleIsRRG ruleRightSide = if  ruleRightSide == "#"
                             then True
                             else False
 
-spliteSingleRLGRule rule = rule
+splitSingleRLGRule nonTerminals rule = if (last (snd rule)) `elem` ['A'..'Z']  --if the rule ends with nonTerminal
+                                          then splitSingleRLGNonTerminalRule nonTerminals (snd rule) (fst rule)
+                                          else splitSingleRLGTerminalRule nonTerminals (snd rule) (fst rule)
 
+splitSingleRLGNonTerminalRule nonTerminals ruleRightSide lastNT = if length ruleRightSide == 2
+    then (nonTerminals, [(lastNT, ruleRightSide)])
+    else (allNonTerminals, [(lastNT, (head ruleRightSide):[freeNonTerminal])] ++ restOfRules)
+  where (allNonTerminals, restOfRules) = splitSingleRLGNonTerminalRule (freeNonTerminal:nonTerminals) (tail ruleRightSide) freeNonTerminal
+        freeNonTerminal = getFreeNonTerminal nonTerminals ['A'..'Z']
+
+splitSingleRLGTerminalRule nonTerminals ruleRightSide lastNT = if length ruleRightSide == 0
+    then (nonTerminals, [(lastNT, "#")])
+    else (allNonTerminals, [(lastNT, (head ruleRightSide):[freeNonTerminal])] ++ restOfRules)
+  where (allNonTerminals, restOfRules) = splitSingleRLGTerminalRule (freeNonTerminal:nonTerminals) (tail ruleRightSide) freeNonTerminal
+        freeNonTerminal = getFreeNonTerminal nonTerminals ['A'..'Z']
+
+getFreeNonTerminal existingNT [] = '@' --hPutStrLn stderr "ERROR: Run out of possible non-terminals." >> exitError
+getFreeNonTerminal existingNT (possibleNT:nts) = if possibleNT `elem` existingNT
+                                                  then getFreeNonTerminal existingNT nts
+                                                  else possibleNT
 
 convertToNFSM rlg = rlg
-
 
 printNFSM x = putStrLn "TBD"
 
