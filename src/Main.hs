@@ -17,7 +17,7 @@ createRLG xs = GrammarType {  nonTerminals =  myUnique (removeChar ',' (xs !! 0)
                               startingSymbol = (xs !! 2) !! 0,
                               rules = myUnique (map parseRule (drop 3 xs)) }
 
-removeChar c str = concat (mySplitOn ',' str)
+removeChar c str = concat (mySplitOn c str)
 
 mySplitOn delim [] = []
 mySplitOn delim xs = [(takeWhile (/= delim) xs)] ++ (mySplitOn delim (safeTail (dropWhile (/= delim) xs)))
