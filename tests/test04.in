@@ -1,0 +1,8 @@
+B,A,B
+c,b,c,a
+A
+B->bB
+B->bB
+A->aB
+A->cB
+B->#
