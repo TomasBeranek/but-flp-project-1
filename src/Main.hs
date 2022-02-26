@@ -14,6 +14,7 @@ data RRG = RRG {  nonTerminalsRRG :: [[Char]], -- might contain new terminals na
                   terminalsRRG :: [Char],
                   startingSymbolRRG  :: Char,
                   rulesRRG :: [([Char],[Char])] } -- might contain new terminals on both sides
+
 data NFSM = NFSM {  states :: [Int],
                     alphabet :: [Char],
                     transitions  :: [(Int,Char,Int)],
@@ -25,9 +26,9 @@ main = getArgs >>= parseArgs
 loadRLG str = createRLG (lines str)
 
 createRLG xs = RLG {  nonTerminalsRLG =  sort (myUnique (removeChar ',' (xs !! 0))),
-                      terminalsRLG = myUnique (removeChar ',' (xs !! 1)),
+                      terminalsRLG = sort (myUnique (removeChar ',' (xs !! 1))),
                       startingSymbolRLG = (xs !! 2) !! 0,
-                      rulesRLG = myUnique (map parseRule (drop 3 xs)) }
+                      rulesRLG = sort (myUnique (map parseRule (drop 3 xs))) }
 
 removeChar c str = concat (mySplitOn c str)
 
@@ -51,9 +52,9 @@ removeRightArrow (x:xs) = [x] ++ removeRightArrow(xs)
 createRule xs = ((xs !! 0) !! 0, xs !! 1)
 
 convertToRRG rlg = RRG {  nonTerminalsRRG =  sort x,
-                          terminalsRRG = sort (terminalsRLG rlg),
+                          terminalsRRG = terminalsRLG rlg,
                           startingSymbolRRG = startingSymbolRLG rlg,
-                          rulesRRG = y }
+                          rulesRRG = sort y }
                  where (x,y) = splitRLGRules (nonTerminalsRLG rlg) (rulesRLG rlg)
 
 splitRLGRules nonTerminals [] = (map (:[]) nonTerminals, [])
@@ -96,7 +97,7 @@ convertToNFSM rrg = NFSM {  states = renameNonTerminals (nonTerminalsRRG rrg) (n
                             alphabet = terminalsRRG rrg,
                             transitions = createTransitions (nonTerminalsRRG rrg) (rulesRRG rrg),
                             startState = fromJust $ elemIndex [startingSymbolRRG rrg] (nonTerminalsRRG rrg),
-                            finalStates = createFinalStates (nonTerminalsRRG rrg) (rulesRRG rrg) }
+                            finalStates = sort (createFinalStates (nonTerminalsRRG rrg) (rulesRRG rrg)) }
 
 renameNonTerminals _ [] = []
 renameNonTerminals allNonTerminals (nt:nts) = (fromJust $ elemIndex nt allNonTerminals):renameNonTerminals allNonTerminals nts
