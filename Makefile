@@ -4,7 +4,7 @@ SRC_DIR=src
 GHC_OPT=-Wall
 TESTS_DIR=tests
 
-all: run
+all: install
 
 run:
 	./$(BIN) $(BIN_OPT)
