@@ -66,7 +66,7 @@ instance Show NFSM where
   show = showNFSM
 
 showNFSM :: NFSM -> String
-showNFSM nfsm = statesStr ++ "\n" ++ alphabet nfsm ++ "\n" ++ show startState nfsm ++ "\n" ++ finalStatesStr ++ "\n" ++ transitionsStr
+showNFSM nfsm = statesStr ++ "\n" ++ alphabet nfsm ++ "\n" ++ show (startState nfsm) ++ "\n" ++ finalStatesStr ++ "\n" ++ transitionsStr
     where statesStr = convertNFSMStatesToStr (states nfsm)
           finalStatesStr = convertNFSMStatesToStr (finalStates nfsm)
           transitionsStr = convertNFSMTransitionsToStr (transitions nfsm)
