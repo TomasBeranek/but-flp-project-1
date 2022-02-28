@@ -1,7 +1,6 @@
 import System.Environment (getArgs)
 import System.Exit (exitWith, ExitCode(ExitSuccess), ExitCode(ExitFailure))
 import System.IO (hPutStrLn, stderr)
-import Debug.Trace (trace)
 import Data.List (elemIndex, sort)
 import Data.Maybe (fromJust)
 
@@ -19,20 +18,22 @@ showRLG rlg = nonTerminalsStr ++ "\n" ++ (terminalsRLG rlg) ++ "\n" ++ [(startin
           rulesStr = convertRLGRulesToStr (rulesRLG rlg)
 
 convertRLGNonterminalsToStr :: [Char] -> [Char]
+convertRLGNonterminalsToStr [] = []     --just to silence GHC
 convertRLGNonterminalsToStr (nt:[]) = [nt]
 convertRLGNonterminalsToStr (nt:nts) = [nt] ++ "," ++  convertRLGNonterminalsToStr nts
 
 convertRLGRulesToStr :: [(Char, [Char])] -> [Char]
+convertRLGRulesToStr [] = []     --just to silence GHC
 convertRLGRulesToStr (r:[]) = convertSingleRLGRuleToStr r
 convertRLGRulesToStr (r:rs) = convertSingleRLGRuleToStr r ++ "\n" ++ convertRLGRulesToStr rs
 
 convertSingleRLGRuleToStr :: (Char, [Char]) -> [Char]
 convertSingleRLGRuleToStr r = [(fst r)] ++ "->" ++ (snd r)
 
-data RRG = RRG {  nonTerminalsRRG :: [[Char]], -- might contain new terminals named "A123", "B21", ...
+data RRG = RRG {  nonTerminalsRRG :: [[Char]], --might contain new terminals named "A123", "B21", ...
                   terminalsRRG :: [Char],
                   startingSymbolRRG  :: Char,
-                  rulesRRG :: [([Char],[Char])] } -- might contain new terminals on both sides
+                  rulesRRG :: [([Char],[Char])] } --might contain new terminals on both sides
 
 instance Show RRG where
   show = showRRG
@@ -43,10 +44,12 @@ showRRG rrg = nonTerminalsStr ++ "\n" ++ (terminalsRRG rrg) ++ "\n" ++ [(startin
           rulesStr = convertRRGRulesToStr (rulesRRG rrg)
 
 convertRRGNonterminalsToStr :: [[Char]] -> [Char]
+convertRRGNonterminalsToStr [] = []     --just to silence GHC
 convertRRGNonterminalsToStr (nt:[]) = nt
 convertRRGNonterminalsToStr (nt:nts) = nt ++ "," ++  convertRRGNonterminalsToStr nts
 
 convertRRGRulesToStr :: [([Char], [Char])] -> [Char]
+convertRRGRulesToStr [] = []     --just to silence GHC
 convertRRGRulesToStr (r:[]) = convertSingleRRGRuleToStr r
 convertRRGRulesToStr (r:rs) = convertSingleRRGRuleToStr r ++ "\n" ++ convertRRGRulesToStr rs
 
@@ -69,10 +72,12 @@ showNFSM nfsm = statesStr ++ "\n" ++ (alphabet nfsm) ++ "\n" ++ show (startState
           transitionsStr = convertNFSMTransitionsToStr (transitions nfsm)
 
 convertNFSMStatesToStr :: Show a => [a] -> [Char]
+convertNFSMStatesToStr [] = []     --just to silence GHC
 convertNFSMStatesToStr (s:[]) = show s
 convertNFSMStatesToStr (s:sx) = (show s) ++ "," ++  convertNFSMStatesToStr sx
 
 convertNFSMTransitionsToStr :: (Show a1, Show a2) => [(a1, Char, a2)] -> [Char]
+convertNFSMTransitionsToStr [] = []     --just to silence GHC
 convertNFSMTransitionsToStr (t:[]) = convertSingleNFSMTransitionToStr t
 convertNFSMTransitionsToStr (t:ts) = convertSingleNFSMTransitionToStr t ++ "\n" ++ convertNFSMTransitionsToStr ts
 
@@ -104,7 +109,7 @@ removeChar :: Eq a => a -> [a] -> [a]
 removeChar c str = concat (mySplitOn c str)
 
 mySplitOn :: Eq a => a -> [a] -> [[a]]
-mySplitOn delim [] = []
+mySplitOn _ [] = []
 mySplitOn delim xs = [(takeWhile (/= delim) xs)] ++ (mySplitOn delim (safeTail (dropWhile (/= delim) xs)))
 
 myUnique :: Eq a => [a] -> [a]
@@ -122,8 +127,9 @@ parseRule :: [Char] -> (Char, [Char])
 parseRule xs =  createRule (removeRightArrow (mySplitOn '-' xs))
 
 removeRightArrow :: [[Char]] -> [[Char]]
+removeRightArrow [] = []      --just to silence GHC
 removeRightArrow (x:[]) = [safeTail x]
-removeRightArrow (x:xs) = [x] ++ removeRightArrow(xs)
+removeRightArrow (x:xs) = [x] ++ removeRightArrow xs
 
 createRule :: [[Char]] -> (Char, [Char])
 createRule xs = ((xs !! 0) !! 0, xs !! 1)
@@ -171,9 +177,10 @@ splitSingleRLGTerminalRule nonTerminals ruleRightSide lastNT = if length ruleRig
         freeNonTerminal = getFreeNonTerminal nonTerminals getAllNonTerminalsNames
 
 getAllNonTerminalsNames :: [[Char]]
-getAllNonTerminalsNames = [ [x] | x <- ['A'..'Z'] ] ++ [ [x] ++ (show y) | y <- [1..], x <- ['A'..'Z'] ]
+getAllNonTerminalsNames = [ [x] | x <- ['A'..'Z'] ] ++ [ [x] ++ show y | y <- [1,2] :: [Integer], x <- ['A'..'Z'] ]
 
-getFreeNonTerminal :: (Foldable t, Eq p) => t p -> [p] -> p
+getFreeNonTerminal :: Foldable t => t [Char] -> [[Char]] -> [Char]
+getFreeNonTerminal _ [] = "@"     --won't happen (just to silence GHC), since the second parameter is infinite array
 getFreeNonTerminal existingNT (possibleNT:nts) = if possibleNT `elem` existingNT
                                                   then getFreeNonTerminal existingNT nts
                                                   else possibleNT
@@ -193,10 +200,10 @@ createTransitions :: [[Char]] -> [([Char], [Char])] -> [(Int, Char, Int)]
 createTransitions _ [] = []
 createTransitions allNonTerminals (r:rs) = if snd r == "#"
                                               then createTransitions allNonTerminals rs
-                                              else (startState, symbol, endState):(createTransitions allNonTerminals rs)
-                                           where startState = fromJust $ elemIndex (fst r) allNonTerminals
+                                              else (fromState, symbol, toState):(createTransitions allNonTerminals rs)
+                                           where fromState = fromJust $ elemIndex (fst r) allNonTerminals
                                                  symbol = head (snd r)
-                                                 endState = fromJust $ elemIndex (tail (snd r)) allNonTerminals
+                                                 toState = fromJust $ elemIndex (tail (snd r)) allNonTerminals
 
 createFinalStates :: Eq a => [a] -> [(a, [Char])] -> [Int]
 createFinalStates _ [] = []
@@ -214,15 +221,15 @@ printRRG :: Show a => a -> IO ()
 printRRG rrg = putStrLn (show rrg)
 
 parseArgs :: [[Char]] -> IO a
-parseArgs ("-i":xs) = hPutStrLn stderr "DEBUG: Print RLG" >> loadInput xs >>= printRLG . loadRLG >> exit
-parseArgs ("-1":xs) = hPutStrLn stderr "DEBUG: Print RRG" >> loadInput xs >>= printRRG . convertToRRG . loadRLG  >> exit
-parseArgs ("-2":xs) = hPutStrLn stderr "DEBUG: Print NFSM" >> loadInput xs >>= printNFSM . convertToNFSM . convertToRRG . loadRLG >> exit
+parseArgs ("-i":xs) = loadInput xs >>= printRLG . loadRLG >> exit
+parseArgs ("-1":xs) = loadInput xs >>= printRRG . convertToRRG . loadRLG  >> exit
+parseArgs ("-2":xs) = loadInput xs >>= printNFSM . convertToNFSM . convertToRRG . loadRLG >> exit
 parseArgs (x:_) = hPutStrLn stderr ("ERROR: Unknown argument '" ++ x ++ "'.") >> exitError
 parseArgs [] = hPutStrLn stderr ("ERROR: No arguments passed (try '-i', '-1' or '-2').") >> exitError
 
 loadInput :: [[Char]] -> IO String
-loadInput (x:[]) = hPutStrLn stderr ("DEBUG: Reading file: " ++ x) >> readFile x
-loadInput [] = hPutStrLn stderr "DEBUG: Reading stdin" >> getContents
+loadInput (x:[]) = readFile x
+loadInput [] = getContents
 loadInput _ = hPutStrLn stderr "ERROR: Invalid number of files (max 1)." >> exitError
 
 exit :: IO a
