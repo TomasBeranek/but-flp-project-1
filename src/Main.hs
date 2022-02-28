@@ -13,14 +13,15 @@ instance Show RLG where
   show = showRLG
 
 showRLG :: RLG -> String
-showRLG rlg = nonTerminalsStr ++ "\n" ++ terminalsRLG rlg ++ "\n" ++ [startingSymbolRLG rlg] ++ "\n" ++ rulesStr
-    where nonTerminalsStr = convertRLGNonterminalsToStr (nonTerminalsRLG rlg)
+showRLG rlg = nonTerminalsStr ++ "\n" ++ terminalsStr ++ "\n" ++ [startingSymbolRLG rlg] ++ "\n" ++ rulesStr
+    where nonTerminalsStr = convertRLGSymbolsToStr (nonTerminalsRLG rlg)
+          terminalsStr = convertRLGSymbolsToStr (terminalsRLG rlg)
           rulesStr = convertRLGRulesToStr (rulesRLG rlg)
 
-convertRLGNonterminalsToStr :: String -> String
-convertRLGNonterminalsToStr [] = []     --just to silence GHC
-convertRLGNonterminalsToStr [nt] = [nt]
-convertRLGNonterminalsToStr (nt:nts) = [nt] ++ "," ++  convertRLGNonterminalsToStr nts
+convertRLGSymbolsToStr :: String -> String
+convertRLGSymbolsToStr [] = []     --just to silence GHC
+convertRLGSymbolsToStr [nt] = [nt]
+convertRLGSymbolsToStr (nt:nts) = [nt] ++ "," ++  convertRLGSymbolsToStr nts
 
 convertRLGRulesToStr :: [(Char, String)] -> String
 convertRLGRulesToStr [] = []     --just to silence GHC
@@ -39,14 +40,20 @@ instance Show RRG where
   show = showRRG
 
 showRRG :: RRG -> String
-showRRG rrg = nonTerminalsStr ++ "\n" ++ terminalsRRG rrg ++ "\n" ++ [startingSymbolRRG rrg] ++ "\n" ++ rulesStr
+showRRG rrg = nonTerminalsStr ++ "\n" ++ terminalsStr ++ "\n" ++ [startingSymbolRRG rrg] ++ "\n" ++ rulesStr
     where nonTerminalsStr = convertRRGNonterminalsToStr (nonTerminalsRRG rrg)
+          terminalsStr = convertRRGTerminalsToStr (terminalsRRG rrg)
           rulesStr = convertRRGRulesToStr (rulesRRG rrg)
 
 convertRRGNonterminalsToStr :: [String] -> String
 convertRRGNonterminalsToStr [] = []     --just to silence GHC
 convertRRGNonterminalsToStr [nt] = nt
 convertRRGNonterminalsToStr (nt:nts) = nt ++ "," ++  convertRRGNonterminalsToStr nts
+
+convertRRGTerminalsToStr :: String -> String
+convertRRGTerminalsToStr [] = []     --just to silence GHC
+convertRRGTerminalsToStr [nt] = [nt]
+convertRRGTerminalsToStr (nt:nts) = [nt] ++ "," ++  convertRRGTerminalsToStr nts
 
 convertRRGRulesToStr :: [(String, String)] -> String
 convertRRGRulesToStr [] = []     --just to silence GHC
