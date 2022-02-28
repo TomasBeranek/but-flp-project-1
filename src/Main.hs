@@ -10,16 +10,66 @@ data RLG = RLG {  nonTerminalsRLG :: [Char],
                   startingSymbolRLG  :: Char,
                   rulesRLG :: [(Char,[Char])] }
 
+instance Show RLG where
+  show = showRLG
+
+showRLG rlg = nonTerminalsStr ++ "\n" ++ (terminalsRLG rlg) ++ "\n" ++ [(startingSymbolRLG rlg)] ++ "\n" ++ rulesStr
+    where nonTerminalsStr = convertRLGNonterminalsToStr (nonTerminalsRLG rlg)
+          rulesStr = convertRLGRulesToStr (rulesRLG rlg)
+
+convertRLGNonterminalsToStr (nt:[]) = [nt]
+convertRLGNonterminalsToStr (nt:nts) = [nt] ++ "," ++  convertRLGNonterminalsToStr nts
+
+convertRLGRulesToStr (r:[]) = convertSingleRLGRuleToStr r
+convertRLGRulesToStr (r:rs) = convertSingleRLGRuleToStr r ++ "\n" ++ convertRLGRulesToStr rs
+
+convertSingleRLGRuleToStr r = [(fst r)] ++ "->" ++ (snd r)
+
 data RRG = RRG {  nonTerminalsRRG :: [[Char]], -- might contain new terminals named "A123", "B21", ...
                   terminalsRRG :: [Char],
                   startingSymbolRRG  :: Char,
                   rulesRRG :: [([Char],[Char])] } -- might contain new terminals on both sides
+
+instance Show RRG where
+  show = showRRG
+
+showRRG rrg = nonTerminalsStr ++ "\n" ++ (terminalsRRG rrg) ++ "\n" ++ [(startingSymbolRRG rrg)] ++ "\n" ++ rulesStr
+    where nonTerminalsStr = convertRRGNonterminalsToStr (nonTerminalsRRG rrg)
+          rulesStr = convertRRGRulesToStr (rulesRRG rrg)
+
+convertRRGNonterminalsToStr (nt:[]) = nt
+convertRRGNonterminalsToStr (nt:nts) = nt ++ "," ++  convertRRGNonterminalsToStr nts
+
+convertRRGRulesToStr (r:[]) = convertSingleRRGRuleToStr r
+convertRRGRulesToStr (r:rs) = convertSingleRRGRuleToStr r ++ "\n" ++ convertRRGRulesToStr rs
+
+convertSingleRRGRuleToStr r = (fst r) ++ "->" ++ (snd r)
 
 data NFSM = NFSM {  states :: [Int],
                     alphabet :: [Char],
                     transitions  :: [(Int,Char,Int)],
                     startState :: Int,
                     finalStates :: [Int] }
+
+instance Show NFSM where
+  show = showNFSM
+
+showNFSM nfsm = statesStr ++ "\n" ++ (alphabet nfsm) ++ "\n" ++ show (startState nfsm) ++ "\n" ++ finalStatesStr ++ "\n" ++ transitionsStr
+    where statesStr = convertNFSMStatesToStr (states nfsm)
+          finalStatesStr = convertNFSMStatesToStr (finalStates nfsm)
+          transitionsStr = convertNFSMTransitionsToStr (transitions nfsm)
+
+convertNFSMStatesToStr (s:[]) = show s
+convertNFSMStatesToStr (s:sx) = (show s) ++ "," ++  convertNFSMStatesToStr sx
+
+convertNFSMTransitionsToStr (t:[]) = convertSingleNFSMTransitionToStr t
+convertNFSMTransitionsToStr (t:ts) = convertSingleNFSMTransitionToStr t ++ "\n" ++ convertNFSMTransitionsToStr ts
+
+convertSingleNFSMTransitionToStr t = show (myFst t) ++ "," ++ [mySnd t] ++ "," ++ show (myThd t)
+
+myFst (a,_,_) = a
+mySnd (_,b,_) = b
+myThd (_,_,c) = c
 
 main = getArgs >>= parseArgs
 
@@ -115,21 +165,11 @@ createFinalStates allNonTerminals (r:rs) = if snd r == "#"
                                             then (fromJust $ elemIndex (fst r) allNonTerminals):(createFinalStates allNonTerminals rs)
                                             else createFinalStates allNonTerminals rs
 
-printNFSM nfsm = putStrLn ("states: " ++ show (states nfsm)) >>
-                 putStrLn ("alphabet: " ++ show (alphabet nfsm)) >>
-                 putStrLn ("transitions: " ++ show (transitions nfsm)) >>
-                 putStrLn ("startState: " ++ show (startState nfsm)) >>
-                 putStrLn ("finalStates: " ++ show (finalStates nfsm))
+printNFSM nfsm = putStrLn (show nfsm)
 
-printRLG rlg = putStrLn ("nonTerminals: " ++ show (nonTerminalsRLG rlg)) >>
-               putStrLn ("terminals: " ++ show (terminalsRLG rlg)) >>
-               putStrLn ("startingSymbol: " ++ show (startingSymbolRLG rlg)) >>
-               putStrLn ("rules: " ++ show (rulesRLG rlg))
+printRLG rlg = putStrLn (show rlg)
 
-printRRG rrg = putStrLn ("nonTerminals: " ++ show (nonTerminalsRRG rrg)) >>
-               putStrLn ("terminals: " ++ show (terminalsRRG rrg)) >>
-               putStrLn ("startingSymbol: " ++ show (startingSymbolRRG rrg)) >>
-               putStrLn ("rules: " ++ show (rulesRRG rrg))
+printRRG rrg = putStrLn (show rrg)
 
 parseArgs ("-i":xs) = hPutStrLn stderr "DEBUG: Print RLG" >> loadInput xs >>= printRLG . loadRLG >> exit
 parseArgs ("-1":xs) = hPutStrLn stderr "DEBUG: Print RRG" >> loadInput xs >>= printRRG . convertToRRG . loadRLG  >> exit
