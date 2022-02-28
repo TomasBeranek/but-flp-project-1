@@ -5,16 +5,9 @@ import sys
 import subprocess
 
 class bcolors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
+    PASSED = '\033[92m'
     FAIL = '\033[91m'
     ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
-
 
 script_name = sys.argv[0]
 tested_binary = sys.argv[1]
@@ -65,7 +58,7 @@ for args, input, output, rc in zip(tests_args, tests_input, tests_output, tests_
 
     if rc == rc_actual:
         if output == output_actual:
-            print(f"{bcolors.OKGREEN}PASSED{bcolors.ENDC}")
+            print(f"{bcolors.PASSED}PASSED{bcolors.ENDC}")
             passed_cnt += 1
         else:
             print(f"{bcolors.FAIL}FAILED{bcolors.ENDC}  Outputs differ!")
@@ -86,5 +79,5 @@ for args, input, output, rc in zip(tests_args, tests_input, tests_output, tests_
 
 # final stats
 print()
-print(  f"{bcolors.OKGREEN}PASSED{bcolors.ENDC}: {passed_cnt}     " +
+print(  f"{bcolors.PASSED}PASSED{bcolors.ENDC}: {passed_cnt}     " +
         f"{bcolors.FAIL}FAILED{bcolors.ENDC}: {failed_cnt}")
