@@ -1,0 +1,10 @@
+U,V,W,X
+i,j,k,l
+X
+X->#
+X->iV
+X->iU
+U->ij
+V->kl
+X->iiW
+W->ijkl
