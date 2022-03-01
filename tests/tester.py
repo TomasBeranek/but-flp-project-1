@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+#  File    tester.py
+#  Author  Tomas Beranek <xberan46@stud.fit.vutbr.cz>
+#  Brief   Automated script for running tests
+#  Date    1.3.2022
+#  Up2date sources can be found at: https://github.com/TomasBeranek/but-flp-project-1
+
 import os
 import sys
 import subprocess

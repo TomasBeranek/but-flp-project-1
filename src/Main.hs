@@ -1,3 +1,9 @@
+--  File    Main.hs
+--  Author  Tomas Beranek <xberan46@stud.fit.vutbr.cz>
+--  Brief   RLG to RRG/NFSM converter in Haskell
+--  Date    1.3.2022
+--  Up2date sources can be found at: https://github.com/TomasBeranek/but-flp-project-1
+
 import System.Environment (getArgs)
 import System.Exit (exitWith, exitSuccess, ExitCode(ExitFailure))
 import System.IO (hPutStrLn, stderr)
