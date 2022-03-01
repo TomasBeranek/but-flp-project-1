@@ -34,6 +34,7 @@ failed_cnt = 0
 # even if some won't be used
 for args, input, output, rc in zip(tests_args, tests_input, tests_output, tests_rc):
     test_name = args[:-5]
+    input_filename = tests_dir + input
 
     with open(tests_dir + args, 'r') as file:
         args = file.read().replace('\n', '')
@@ -47,35 +48,45 @@ for args, input, output, rc in zip(tests_args, tests_input, tests_output, tests_
     with open(tests_dir + rc, 'r') as file:
         rc = int(file.read().replace('\n', ''))
 
-    cmd = ["./" + tested_binary, args]
-    input = input.encode("utf-8")
-    result = subprocess.run(cmd, stdout=subprocess.PIPE, input = input)
+    for inpute_type in ["stdin", "file"]:
+        cmd = ["./" + tested_binary, args]
+        result = None
 
-    output_actual = result.stdout.decode("utf-8")
-    rc_actual = result.returncode
-
-    print(test_name.ljust(20), end = "")
-
-    if rc == rc_actual:
-        if output == output_actual:
-            print(f"{bcolors.PASSED}PASSED{bcolors.ENDC}")
-            passed_cnt += 1
+        if inpute_type == "file":
+            cmd += [input_filename]
+            result = subprocess.run(cmd, stdout=subprocess.PIPE)
         else:
-            print(f"{bcolors.FAIL}FAILED{bcolors.ENDC}  Outputs differ!")
+            input = input.encode("utf-8")
+            result = subprocess.run(cmd, stdout=subprocess.PIPE, input = input)
+
+        output_actual = result.stdout.decode("utf-8")
+        rc_actual = result.returncode
+
+        if inpute_type == "file":
+            print((test_name + " (file)").ljust(20), end = "")
+        else:
+            print((test_name + " (stdin)").ljust(20), end = "")
+
+        if rc == rc_actual:
+            if output == output_actual:
+                print(f"{bcolors.PASSED}PASSED{bcolors.ENDC}")
+                passed_cnt += 1
+            else:
+                print(f"{bcolors.FAIL}FAILED{bcolors.ENDC}  Outputs differ!")
+                failed_cnt += 1
+
+                print("#"*20 + "  Expected  " + "#"*20)
+                print(output)
+                print("#"*21 + "  Actual  " + "#"*21)
+                print(output_actual)
+                print("#"*52)
+
+        else:
+            print(f"{bcolors.FAIL}FAILED{bcolors.ENDC}  Return codes differ!")
             failed_cnt += 1
 
-            print("#"*20 + "  Expected  " + "#"*20)
-            print(output)
-            print("#"*21 + "  Actual  " + "#"*21)
-            print(output_actual)
-            print("#"*52)
-
-    else:
-        print(f"{bcolors.FAIL}FAILED{bcolors.ENDC}  Return codes differ!")
-        failed_cnt += 1
-
-        print(f"Expected:  {rc}")
-        print(f"Actual:    {rc_actual}")
+            print(f"Expected:  {rc}")
+            print(f"Actual:    {rc_actual}")
 
 # final stats
 print()
