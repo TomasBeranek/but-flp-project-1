@@ -1,0 +1,8 @@
+A,A1,B,B1,C,C1,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z
+a
+A
+A->aZ
+A1->aB1
+B1->aC1
+C1->#
+Z->aA1
