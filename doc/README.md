@@ -1,0 +1,11 @@
+### Tests
+- ```test01``` - RRG from the assignment.
+- ```test02``` - RRG with duplicities.
+- ```test03```
+- ```test04``` - RRG with duplicities and wrong alphabetical order.
+- ```test05``` - RLG with single simple full-terminal rule. Output RRG.
+- ```test06``` - RLG with more complex full-terminal and non-terminal rules. Output RRG.
+- ```test07``` - exceeding simple non-terminal names by splitting rules. Output RRG.
+- ```test08``` - same as ```test05```. Output NFSM.
+- ```test09``` - same as ```test06```. Output NFSM.
+- ```test10``` - same as ```test07```. Output NFSM.
