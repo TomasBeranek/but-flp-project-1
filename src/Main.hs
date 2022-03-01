@@ -231,7 +231,7 @@ parseArgs [] = hPutStrLn stderr "ERROR: No arguments passed (try '-i', '-1' or '
 loadInput :: [String] -> IO String
 loadInput [] = getContents
 loadInput [x] = readFile x
-loadInput _ = hPutStrLn stderr "ERROR: Invalid number of files (max 1)." >> exitError
+loadInput _ = hPutStrLn stderr "ERROR: Invalid number of arguments (max 2)." >> exitError
 
 exitError :: IO a
 exitError = exitWith (ExitFailure 1)

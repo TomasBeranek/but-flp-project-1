@@ -60,12 +60,16 @@ for args, input, output, rc in zip(tests_args, tests_input, tests_output, tests_
 
         if inpute_type == "file":
             cmd += [input_filename]
-            result = subprocess.run(cmd, stdout=subprocess.PIPE)
+            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         else:
             input = input.encode("utf-8")
-            result = subprocess.run(cmd, stdout=subprocess.PIPE, input = input)
+            result = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, input = input)
 
         output_actual = result.stdout.decode("utf-8")
+
+        if rc != 0:
+            output_actual = result.stderr.decode("utf-8")
+
         rc_actual = result.returncode
 
         if inpute_type == "file":
