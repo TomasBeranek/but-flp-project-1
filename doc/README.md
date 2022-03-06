@@ -9,3 +9,22 @@
 - ```test08``` - same as ```test05```. Output NFSM.
 - ```test09``` - same as ```test06```. Output NFSM.
 - ```test10``` - same as ```test07```. Output NFSM.
+- ```test11``` - random RLG. Output NFSM.
+- ```test12``` - random RLG. Output NFSM.
+- ```test13``` - random RLG. Output NFSM.
+- ```test14``` - incorrect program option. Output ERROR.
+- ```test15``` - more than one correct argument. Output ERROR.
+- ```test16``` - zero arguments. Output ERROR.
+- ```test17``` - more than one file. Output ERROR.
+- ```test18``` - empty input. Output ERROR.
+- ```test19``` - empty non-terminal set. Output ERROR.
+- ```test20``` - incorrect format of non-terminal set. Output ERROR.
+- ```test21``` - empty terminal set. Output LRG.
+- ```test22``` - incorrect format of terminal set. Output ERROR.
+- ```test23``` - no starting symbol. Output ERROR.
+- ```test24``` - incorrect format of starting symbol. Output ERROR.
+- ```test25``` - empty rule set. Output ERROR.
+- ```test26``` - incorrect format of rule set. Output ERROR.
+- ```test27``` - rules contain non-existing non-terminal. Output ERROR.
+- ```test28``` - rules contain non-existing terminal. Output ERROR.
+- ```test29``` - terminal set is empty and rule set contains only #-rules. Output NFSM.
