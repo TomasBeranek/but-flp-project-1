@@ -8,6 +8,8 @@ BIN_OPT=-i
 SRC_DIR=src
 GHC_OPT=-Wall
 TESTS_DIR=tests
+TEST_SRC_NUM=1
+TEST_DST_NUM=1
 
 all: install
 
@@ -30,3 +32,9 @@ lint:
 
 test: compile
 	python3 tests/tester.py $(BIN) $(TESTS_DIR)
+
+copy_test:
+	cp $(TESTS_DIR)/test$(TEST_SRC_NUM).args $(TESTS_DIR)/test$(TEST_DST_NUM).args
+	cp $(TESTS_DIR)/test$(TEST_SRC_NUM).in $(TESTS_DIR)/test$(TEST_DST_NUM).in
+	cp $(TESTS_DIR)/test$(TEST_SRC_NUM).out $(TESTS_DIR)/test$(TEST_DST_NUM).out
+	cp $(TESTS_DIR)/test$(TEST_SRC_NUM).rc $(TESTS_DIR)/test$(TEST_DST_NUM).rc
