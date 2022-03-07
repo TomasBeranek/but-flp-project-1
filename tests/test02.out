@@ -1,4 +1,7 @@
-nonTerminals: "AB"
-terminals: "cba"
-startingSymbol: 'A'
-rules: [('A',"aB"),('A',"cB"),('B',"bB"),('B',"#")]
+A,B
+a,b,c
+A
+A->aB
+A->cB
+B->#
+B->bB
