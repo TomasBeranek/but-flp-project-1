@@ -9,6 +9,7 @@ import System.Exit (exitWith, exitSuccess, ExitCode(ExitFailure))
 import System.IO (hPutStrLn, stderr)
 import Data.List (elemIndex, sort)
 import Data.Maybe (fromJust)
+import Control.Exception (catch, ErrorCall)
 
 data RLG = RLG {  nonTerminalsRLG :: String,
                   terminalsRLG :: String,
@@ -106,17 +107,54 @@ mySnd (_,b,_) = b
 myThd :: (a, b, c) -> c
 myThd (_,_,c) = c
 
-main :: IO b
-main = getArgs >>= parseArgs
+main :: IO ()
+main = do
+  args <- getArgs
+  catch (parseArgs args) handler
+      where
+          handler :: ErrorCall -> IO ()
+          handler err = hPutStrLn stderr (head (lines (show err))) >> exitError
 
 loadRLG :: String -> RLG
-loadRLG str = createRLG (lines str)
+loadRLG str = if str == "" || str == "\n" -- in unix-like systems a file ends with a newline
+  then error "ERROR: Empty input."
+  else createRLG (lines str)
 
 createRLG :: [String] -> RLG
-createRLG xs = RLG {  nonTerminalsRLG =  sort (myUnique (removeChar ',' (head xs))),
-                      terminalsRLG = sort (myUnique (removeChar ',' (xs !! 1))),
-                      startingSymbolRLG = head (xs !! 2),
-                      rulesRLG = sort (myUnique (map parseRule (drop 3 xs))) }
+createRLG xs
+  | null xs        = error "ERROR: Empty input."
+  | length xs == 1 = error "ERROR: Empty terminal set."
+  | length xs == 2 = error "ERROR: Missing starting non-terminal."
+  | length xs == 3 = error "ERROR: Empty rule set."
+  | otherwise      = RLG {  nonTerminalsRLG = nonTerminals,
+                            terminalsRLG = terminals,
+                            startingSymbolRLG = startingSymbol,
+                            rulesRLG = rules }
+                          where nonTerminals = sort (myUnique (removeChar ',' (checkNonTerminalsFormat (head xs))))
+                                terminals =  sort (myUnique (removeChar ',' (checkTerminalsFormat (xs !! 1))))
+                                startingSymbol = checkStartingSymbolFormat (xs !! 2) nonTerminals
+                                rules = sort (myUnique (map parseRule (checkRulesFormat (drop 3 xs))))
+
+checkNonTerminalsFormat nts = nts
+  -- | null nts = error "ERROR: Empty non-terminal set."
+  -- | strContainsOnlyAlphabet nts ['A'..'Z'] = nts
+  -- | otherwise = error "ERROR: Incorrect format of non-terminal set."
+
+strContainsOnlyAlphabet [] _ = True
+strContainsOnlyAlphabet (x:xs) alph = if x `elem` alph
+                                        then strContainsOnlyAlphabet xs alph
+                                        else False
+
+checkTerminalsFormat ts = ts
+  -- | strContainsOnlyAlphabet ts ['a'..'z'] = ts
+  -- | otherwise = error "ERROR: Incorrect format of terminal set."
+
+checkStartingSymbolFormat str nts = head str
+  -- | null str = error "asd"
+  -- | length str > 1 || not ((head nts) `elem` nts) = error "asd"
+  -- | otherwise = head str
+
+checkRulesFormat x = x
 
 removeChar :: Eq a => a -> [a] -> [a]
 removeChar c str = concat (mySplitOn c str)
@@ -221,17 +259,19 @@ createFinalStates allNonTerminals (r:rs) = if snd r == "#"
                                             then fromJust (elemIndex (fst r) allNonTerminals) : createFinalStates allNonTerminals rs
                                             else createFinalStates allNonTerminals rs
 
-parseArgs :: [String] -> IO a
+parseArgs :: [String] -> IO ()
 parseArgs ("-i":xs) = loadInput xs >>= print . loadRLG >> exitSuccess
 parseArgs ("-1":xs) = loadInput xs >>= print . convertToRRG . loadRLG  >> exitSuccess
 parseArgs ("-2":xs) = loadInput xs >>= print . convertToNFSM . convertToRRG . loadRLG >> exitSuccess
-parseArgs (x:_) = hPutStrLn stderr ("ERROR: Unknown argument '" ++ x ++ "'.") >> exitError
-parseArgs [] = hPutStrLn stderr "ERROR: No arguments passed (try '-i', '-1' or '-2')." >> exitError
+parseArgs _ = error "ERROR: No valid arguments passed (try '-i', '-1' or '-2')."
 
 loadInput :: [String] -> IO String
 loadInput [] = getContents
+loadInput ("-i":_) = error "ERROR: Invalid number of options (must be only 1)."
+loadInput ("-1":_) = error "ERROR: Invalid number of options (must be only 1)."
+loadInput ("-2":_) = error "ERROR: Invalid number of options (must be only 1)."
 loadInput [x] = readFile x
-loadInput _ = hPutStrLn stderr "ERROR: Invalid number of arguments (max 2)." >> exitError
+loadInput _ = error "ERROR: Invalid number of arguments (max 2)."
 
 exitError :: IO a
 exitError = exitWith (ExitFailure 1)
