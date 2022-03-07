@@ -55,7 +55,7 @@ for args, input, output, rc in zip(tests_args, tests_input, tests_output, tests_
         rc = int(file.read().replace('\n', ''))
 
     for inpute_type in ["stdin", "file"]:
-        cmd = ["./" + tested_binary, args]
+        cmd = ["./" + tested_binary] + args.split()
         result = None
 
         if inpute_type == "file":
