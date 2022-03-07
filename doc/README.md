@@ -1,8 +1,8 @@
 ### Tests
-- ```test01``` - RRG from the assignment.
-- ```test02``` - RRG with duplicities.
-- ```test03```
-- ```test04``` - RRG with duplicities and wrong alphabetical order.
+- ```test01``` - RRG from the assignment. Output NFSM.
+- ```test02``` - RRG with duplicities. Output RLG.
+- ```test03``` - RLG with single simple full-terminal rule. Output RLG.
+- ```test04``` - RRG with duplicities and wrong alphabetical order. Output RRG.
 - ```test05``` - RLG with single simple full-terminal rule. Output RRG.
 - ```test06``` - RLG with more complex full-terminal and non-terminal rules. Output RRG.
 - ```test07``` - exceeding simple non-terminal names by splitting rules. Output RRG.
@@ -28,3 +28,4 @@
 - ```test27``` - rules contain non-existing non-terminal. Output ERROR.
 - ```test28``` - rules contain non-existing terminal. Output ERROR.
 - ```test29``` - terminal set is empty and rule set contains only #-rules. Output NFSM.
+- ```test30``` - starting symbol is non-existing non-terminal. Output ERROR.
