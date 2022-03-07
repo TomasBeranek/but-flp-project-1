@@ -19,7 +19,7 @@
 - ```test18``` - empty input. Output ERROR.
 - ```test19``` - empty non-terminal set. Output ERROR.
 - ```test20``` - incorrect format of non-terminal set. Output ERROR.
-- ```test21``` - empty terminal set. Output LRG.
+- ```test21``` - empty terminal set. Output ERROR.
 - ```test22``` - incorrect format of terminal set. Output ERROR.
 - ```test23``` - no starting symbol. Output ERROR.
 - ```test24``` - incorrect format of starting symbol. Output ERROR.

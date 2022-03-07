@@ -1,1 +1,1 @@
-ERROR: Empty terminal set.
+ERROR: Rules contain non-existing terminal 'a'.
