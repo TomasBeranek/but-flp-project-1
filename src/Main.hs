@@ -133,28 +133,59 @@ createRLG xs
                           where nonTerminals = sort (myUnique (removeChar ',' (checkNonTerminalsFormat (head xs))))
                                 terminals =  sort (myUnique (removeChar ',' (checkTerminalsFormat (xs !! 1))))
                                 startingSymbol = checkStartingSymbolFormat (xs !! 2) nonTerminals
-                                rules = sort (myUnique (map parseRule (checkRulesFormat (drop 3 xs))))
+                                rules = sort (myUnique (map parseRule (checkRulesFormat (drop 3 xs) nonTerminals terminals)))
 
-checkNonTerminalsFormat nts = nts
-  -- | null nts = error "ERROR: Empty non-terminal set."
-  -- | strContainsOnlyAlphabet nts ['A'..'Z'] = nts
-  -- | otherwise = error "ERROR: Incorrect format of non-terminal set."
+checkNonTerminalsFormat nts
+  | null nts = error "ERROR: Empty non-terminal set."
+  | strHasCSVFormat nts ['A'..'Z'] "item" "ERROR: Incorrect format of non-terminal set." = nts
+  | otherwise = error "ERROR: Incorrect format of non-terminal set."
 
-strContainsOnlyAlphabet [] _ = True
-strContainsOnlyAlphabet (x:xs) alph = if x `elem` alph
-                                        then strContainsOnlyAlphabet xs alph
-                                        else False
+checkTerminalsFormat ts
+  | null ts = ts  -- alphabet can be empty
+  | strHasCSVFormat ts ['a'..'z'] "item" "ERROR: Incorrect format of terminal set." = ts
+  | otherwise = error "ERROR: Incorrect format of terminal set."
 
-checkTerminalsFormat ts = ts
-  -- | strContainsOnlyAlphabet ts ['a'..'z'] = ts
-  -- | otherwise = error "ERROR: Incorrect format of terminal set."
+strHasCSVFormat [] _ curr errLine = if curr == "delim"
+                                      then True
+                                      else error errLine
+strHasCSVFormat (x:xs) items curr errLine = if curr == "item"
+                                              then if x `elem` items
+                                                then strHasCSVFormat xs items "delim" errLine
+                                                else error errLine
+                                              else if x == ','
+                                                then strHasCSVFormat xs items "item" errLine
+                                                else error errLine
 
-checkStartingSymbolFormat str nts = head str
-  -- | null str = error "asd"
-  -- | length str > 1 || not ((head nts) `elem` nts) = error "asd"
-  -- | otherwise = head str
+checkStartingSymbolFormat str nts
+  | null str = error "ERROR: Missing starting symbol."
+  | length str > 1 || not ((head nts) `elem` nts) = error "ERROR: Incorrect format of starting symbol."
+  | otherwise = head str
 
-checkRulesFormat x = x
+checkRulesFormat rs nts ts
+  | null rs = error "ERROR: Empty rules set."
+  | individualRulesHaveCorrectFormat rs nts ts = rs
+
+individualRulesHaveCorrectFormat [] _ _ = True
+individualRulesHaveCorrectFormat (r:rs) nts ts = if ruleHasCorrectFormat r nts ts "left"
+                                                    then individualRulesHaveCorrectFormat rs nts ts
+                                                    else False
+
+ruleHasCorrectFormat (x:xs) nts ts curr = True
+  -- | curr == "left" && x `elem` nts = ruleHasCorrectFormat xs nts ts "-"
+  -- | curr == "-" = ruleHasCorrectFormat xs nts ts ">"
+  -- | curr == ">" = ruleHasCorrectFormat xs nts ts "right"
+  -- | curr == "right" && x == '#' && xs == [] = True
+  -- | curr == "right" && x `elem` ts = ruleHasCorrectFormat xs nts ts "rightT"
+  -- | curr == "right" && x `elem` nts && xs == [] = True
+  -- | otherwise = error (determineError curr x)
+
+determineError curr x = "ERROR: Incorrect format of rules set."
+  -- | curr == "left" && x `elem` ['A'..'Z'] = "ERROR: Rules contain non-existing non-terminal '" ++ [x] ++ "'."
+  -- | curr == "-" = ruleHasCorrectFormat xs nts ts ">"
+  -- | curr == ">" = ruleHasCorrectFormat xs nts ts "right"
+  -- | curr == "right" && x == '#' && xs == [] = True
+  -- | curr == "right" && x `elem` ts = ruleHasCorrectFormat xs nts ts "rightT"
+  -- | curr == "right" && x `elem` nts && xs == [] = True
 
 removeChar :: Eq a => a -> [a] -> [a]
 removeChar c str = concat (mySplitOn c str)
