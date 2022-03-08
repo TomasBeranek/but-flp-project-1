@@ -38,3 +38,8 @@ copy_test:
 	cp $(TESTS_DIR)/test$(TEST_SRC_NUM).in $(TESTS_DIR)/test$(TEST_DST_NUM).in
 	cp $(TESTS_DIR)/test$(TEST_SRC_NUM).out $(TESTS_DIR)/test$(TEST_DST_NUM).out
 	cp $(TESTS_DIR)/test$(TEST_SRC_NUM).rc $(TESTS_DIR)/test$(TEST_DST_NUM).rc
+
+format:
+	cat $(SRC_DIR)/Main.hs | hindent > tmp
+	cat tmp > $(SRC_DIR)/Main.hs
+	rm tmp
