@@ -26,12 +26,12 @@ showRLG rlg = nonTerminalsStr ++ "\n" ++ terminalsStr ++ "\n" ++ [startingSymbol
           rulesStr = convertRLGRulesToStr (rulesRLG rlg)
 
 convertRLGSymbolsToStr :: String -> String
-convertRLGSymbolsToStr [] = []     --just to silence GHC
+convertRLGSymbolsToStr [] = []
 convertRLGSymbolsToStr [nt] = [nt]
 convertRLGSymbolsToStr (nt:nts) = [nt] ++ "," ++  convertRLGSymbolsToStr nts
 
 convertRLGRulesToStr :: [(Char, String)] -> String
-convertRLGRulesToStr [] = []     --just to silence GHC
+convertRLGRulesToStr [] = []
 convertRLGRulesToStr [r] = convertSingleRLGRuleToStr r
 convertRLGRulesToStr (r:rs) = convertSingleRLGRuleToStr r ++ "\n" ++ convertRLGRulesToStr rs
 
@@ -53,17 +53,17 @@ showRRG rrg = nonTerminalsStr ++ "\n" ++ terminalsStr ++ "\n" ++ [startingSymbol
           rulesStr = convertRRGRulesToStr (rulesRRG rrg)
 
 convertRRGNonterminalsToStr :: [String] -> String
-convertRRGNonterminalsToStr [] = []     --just to silence GHC
+convertRRGNonterminalsToStr [] = []
 convertRRGNonterminalsToStr [nt] = nt
 convertRRGNonterminalsToStr (nt:nts) = nt ++ "," ++  convertRRGNonterminalsToStr nts
 
 convertRRGTerminalsToStr :: String -> String
-convertRRGTerminalsToStr [] = []     --just to silence GHC
+convertRRGTerminalsToStr [] = []
 convertRRGTerminalsToStr [nt] = [nt]
 convertRRGTerminalsToStr (nt:nts) = [nt] ++ "," ++  convertRRGTerminalsToStr nts
 
 convertRRGRulesToStr :: [(String, String)] -> String
-convertRRGRulesToStr [] = []     --just to silence GHC
+convertRRGRulesToStr [] = []
 convertRRGRulesToStr [r] = convertSingleRRGRuleToStr r
 convertRRGRulesToStr (r:rs) = convertSingleRRGRuleToStr r ++ "\n" ++ convertRRGRulesToStr rs
 
@@ -86,12 +86,12 @@ showNFSM nfsm = statesStr ++ "\n" ++ alphabet nfsm ++ "\n" ++ show (startState n
           transitionsStr = convertNFSMTransitionsToStr (transitions nfsm)
 
 convertNFSMStatesToStr :: Show a => [a] -> String
-convertNFSMStatesToStr [] = []     --just to silence GHC
+convertNFSMStatesToStr [] = []
 convertNFSMStatesToStr [s] = show s
 convertNFSMStatesToStr (s:sx) = show s ++ "," ++  convertNFSMStatesToStr sx
 
 convertNFSMTransitionsToStr :: (Show a1, Show a2) => [(a1, Char, a2)] -> String
-convertNFSMTransitionsToStr [] = []     --just to silence GHC
+convertNFSMTransitionsToStr [] = []
 convertNFSMTransitionsToStr [t] = convertSingleNFSMTransitionToStr t
 convertNFSMTransitionsToStr (t:ts) = convertSingleNFSMTransitionToStr t ++ "\n" ++ convertNFSMTransitionsToStr ts
 
@@ -135,57 +135,65 @@ createRLG xs
                                 startingSymbol = checkStartingSymbolFormat (xs !! 2) nonTerminals
                                 rules = sort (myUnique (map parseRule (checkRulesFormat (drop 3 xs) nonTerminals terminals)))
 
+checkNonTerminalsFormat :: String -> String
 checkNonTerminalsFormat nts
   | null nts = error "ERROR: Empty non-terminal set."
   | strHasCSVFormat nts ['A'..'Z'] "item" "ERROR: Incorrect format of non-terminal set." = nts
   | otherwise = error "ERROR: Incorrect format of non-terminal set."
 
+checkTerminalsFormat :: String -> String
 checkTerminalsFormat ts
   | null ts = ts  -- alphabet can be empty
   | strHasCSVFormat ts ['a'..'z'] "item" "ERROR: Incorrect format of terminal set." = ts
   | otherwise = error "ERROR: Incorrect format of terminal set."
 
-strHasCSVFormat [] _ curr errLine = if curr == "delim"
-                                      then True
-                                      else error errLine
-strHasCSVFormat (x:xs) items curr errLine = if curr == "item"
-                                              then if x `elem` items
-                                                then strHasCSVFormat xs items "delim" errLine
-                                                else error errLine
-                                              else if x == ','
-                                                then strHasCSVFormat xs items "item" errLine
-                                                else error errLine
+strHasCSVFormat :: String -> String -> String -> String -> Bool
+strHasCSVFormat [] _ curr errLine = (curr == "delim") || error errLine
+strHasCSVFormat (x : xs) items curr errLine
+   | curr == "item" = if x `elem` items
+     then strHasCSVFormat xs items "delim" errLine
+     else error errLine
+   | x == ',' = strHasCSVFormat xs items "item" errLine
+   | otherwise = error errLine
 
+checkStartingSymbolFormat :: String -> String -> Char
 checkStartingSymbolFormat str nts
   | null str = error "ERROR: Missing starting symbol."
-  | length str > 1 || not ((head nts) `elem` nts) = error "ERROR: Incorrect format of starting symbol."
+  | length str > 1 = error "ERROR: Incorrect format of starting symbol."
+  | head str `notElem` nts = error "ERROR: Starting symbol is non-existing non-terminal."
   | otherwise = head str
 
+checkRulesFormat :: [String] -> String -> String -> [String]
 checkRulesFormat rs nts ts
   | null rs = error "ERROR: Empty rules set."
   | individualRulesHaveCorrectFormat rs nts ts = rs
+checkRulesFormat _ _ _ = undefined
 
+individualRulesHaveCorrectFormat :: [String] -> String -> String -> Bool
 individualRulesHaveCorrectFormat [] _ _ = True
-individualRulesHaveCorrectFormat (r:rs) nts ts = if ruleHasCorrectFormat r nts ts "left"
-                                                    then individualRulesHaveCorrectFormat rs nts ts
-                                                    else False
+individualRulesHaveCorrectFormat (r:rs) nts ts = ruleHasCorrectFormat r nts ts "left" && individualRulesHaveCorrectFormat rs nts ts
 
-ruleHasCorrectFormat (x:xs) nts ts curr = True
-  -- | curr == "left" && x `elem` nts = ruleHasCorrectFormat xs nts ts "-"
-  -- | curr == "-" = ruleHasCorrectFormat xs nts ts ">"
-  -- | curr == ">" = ruleHasCorrectFormat xs nts ts "right"
-  -- | curr == "right" && x == '#' && xs == [] = True
-  -- | curr == "right" && x `elem` ts = ruleHasCorrectFormat xs nts ts "rightT"
-  -- | curr == "right" && x `elem` nts && xs == [] = True
-  -- | otherwise = error (determineError curr x)
+ruleHasCorrectFormat :: String -> String -> String -> String -> Bool
+ruleHasCorrectFormat (x:xs) nts ts curr
+  | curr == "left" && x `elem` nts = ruleHasCorrectFormat xs nts ts "-"
+  | curr == "-" && x == '-' = ruleHasCorrectFormat xs nts ts ">"
+  | curr == ">" && x == '>' = ruleHasCorrectFormat xs nts ts "right"
+  | curr == "right" && x == '#' && null xs = True
+  | curr == "right" && x `elem` ts && null xs = True
+  | curr == "right" && x `elem` ts = ruleHasCorrectFormat xs nts ts "rightT"
+  | curr == "rightT" && x `elem` ts && null xs = True
+  | curr == "rightT" && x `elem` ts = ruleHasCorrectFormat xs nts ts "rightT"
+  | curr == "rightT" && x `elem` nts && null xs = True
+  | otherwise = error (determineError curr x)
+ruleHasCorrectFormat [] _ _ _ = undefined
 
-determineError curr x = "ERROR: Incorrect format of rules set."
-  -- | curr == "left" && x `elem` ['A'..'Z'] = "ERROR: Rules contain non-existing non-terminal '" ++ [x] ++ "'."
-  -- | curr == "-" = ruleHasCorrectFormat xs nts ts ">"
-  -- | curr == ">" = ruleHasCorrectFormat xs nts ts "right"
-  -- | curr == "right" && x == '#' && xs == [] = True
-  -- | curr == "right" && x `elem` ts = ruleHasCorrectFormat xs nts ts "rightT"
-  -- | curr == "right" && x `elem` nts && xs == [] = True
+determineError :: String -> Char -> String
+determineError curr x
+  | curr == "left" && x `elem` ['A'..'Z'] = "ERROR: Rules contain non-existing non-terminal '" ++ [x] ++ "'."
+  | curr == "right" && x `elem` ['a'..'z'] = "ERROR: Rules contain non-existing terminal '" ++ [x] ++ "'."
+  | curr == "rightT" && x `elem` ['a'..'z'] = "ERROR: Rules contain non-existing terminal '" ++ [x] ++ "'."
+  | curr == "rightT" && x `elem` ['A'..'Z'] = "ERROR: Rules contain non-existing non-terminal '" ++ [x] ++ "'."
+  | otherwise = "ERROR: Incorrect format of rule set."
 
 removeChar :: Eq a => a -> [a] -> [a]
 removeChar c str = concat (mySplitOn c str)
@@ -208,7 +216,7 @@ parseRule :: String -> (Char, String)
 parseRule xs =  createRule (removeRightArrow (mySplitOn '-' xs))
 
 removeRightArrow :: [String] -> [String]
-removeRightArrow [] = []      --just to silence GHC
+removeRightArrow [] = undefined
 removeRightArrow [x] = [safeTail x]
 removeRightArrow (x:xs) = x : removeRightArrow xs
 
