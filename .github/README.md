@@ -1,4 +1,42 @@
-### Tests
+# RLG to NFSM/RRG Converter
+
+RLG to NFSM/RRG Converter is an application written in Haskell that allows you to convert RLGs (right linear grammars) into NFSMs (non-deterministic finite state machines) or RRGs (right regular grammars). RLGs cannot contain simple rules (e.g. ```A -> B```).
+
+## Installation
+To compile the app it is necessary to have the GHC compiler installed. To create the ```flp21-fun``` binary run:
+
+```
+git clone https://github.com/TomasBeranek/but-flp-project-1.git
+cd but-flp-project-1/
+make
+```
+
+## Usage
+The app can be run:
+```
+flp21-fun OPTION [INPUT_FILE]
+```
+
+where
+- ```OPTION``` is one of:
+  - ```-i``` prints the loaded RLG to ```stdout```. The printed RLG is in the standard format, i.e. without duplicates, alphabetically sorted, etc.
+  - ```-1``` prints the converted RRG to ```stdout``` in the same standard format as the input RLG. The exception is newly created non-terminals, which can be named ```A1```, ```B1```, etc.
+  - ```-2``` prints the converted NFSM to ```stdout```.
+- ```INPUT_FILE``` is an optional parameter containing the name of the input file. If the file is not specified, the program reads the input from ```stdin```.
+
+For examples of RLG input formats and RRG/NFSM output formats, see the ```tests/``` directory.
+
+## Tests
+To run the tests, run:
+
+```
+make test
+```
+
+Each test is run in both ```stdin``` and ```INPUT_FILE``` mode.
+
+## Test descriptions
+
 - ```test01``` - RRG from the assignment. Output NFSM.
 - ```test02``` - RRG with duplicities. Output RLG.
 - ```test03``` - RLG with single simple full-terminal rule. Output RLG.
@@ -29,3 +67,7 @@
 - ```test28``` - rules contain non-existing terminal. Output ERROR.
 - ```test29``` - terminal set is empty and rule set contains only #-rules. Output NFSM.
 - ```test30``` - starting symbol is non-existing non-terminal. Output ERROR.
+
+## Features implemented beyond requirements
+- checking of the format of program input arguments. See ```test14-17```.
+- checking of the format of input RLG. See ```test18-30```.
