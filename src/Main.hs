@@ -378,7 +378,7 @@ getAllNonTerminalsNames =
 {-|
   The function returns next free non-terminal name.
 -}
-getFreeNonTerminal :: Foldable t => t String -> [String] -> String
+getFreeNonTerminal :: [String] -> [String] -> String
 getFreeNonTerminal _ [] = "@" --won't happen (just to silence GHC), since the second parameter is infinite array
 getFreeNonTerminal existingNT (possibleNT:nts) =
   if possibleNT `elem` existingNT
