@@ -71,3 +71,5 @@ Each test is run in both ```stdin``` and ```INPUT_FILE``` mode.
 ## Features implemented beyond requirements
 - checking of the format of program input arguments. See ```test14-17```.
 - checking of the format of input RLG. See ```test18-30```.
+- set of tests.
+- script ```tests/tester.py``` for automated testing.
