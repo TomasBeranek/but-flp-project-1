@@ -3,6 +3,7 @@
 --  Brief   RLG to RRG/NFSM converter in Haskell
 --  Date    1.3.2022
 --  Up2date sources can be found at: https://github.com/TomasBeranek/but-flp-project-1
+
 import Control.Exception (ErrorCall, catch)
 import Data.List (elemIndex, sort)
 import Data.Maybe (fromJust)
@@ -147,6 +148,9 @@ loadRLG str =
     then error "ERROR: Empty input."
     else createRLG (lines str)
 
+{-|
+  The function creates the RLG data type from a list of input lines.
+-}
 createRLG :: [String] -> RLG
 createRLG xs
   | null xs = error "ERROR: Empty input."
@@ -191,6 +195,9 @@ checkTerminalsFormat ts
      "ERROR: Incorrect format of terminal set." = ts
   | otherwise = error "ERROR: Incorrect format of terminal set."
 
+{-|
+  The function checks if given string has CSV format with given delimiter.
+-}
 strHasCSVFormat :: String -> String -> String -> String -> Bool
 strHasCSVFormat [] _ curr errLine = (curr == "delim") || error errLine
 strHasCSVFormat (x:xs) items curr errLine
@@ -215,12 +222,18 @@ checkRulesFormat rs nts ts
   | individualRulesHaveCorrectFormat rs nts ts = rs
 checkRulesFormat _ _ _ = undefined
 
+{-|
+  The function checks syntactic and semantic format of all the rules.
+-}
 individualRulesHaveCorrectFormat :: [String] -> String -> String -> Bool
 individualRulesHaveCorrectFormat [] _ _ = True
 individualRulesHaveCorrectFormat (r:rs) nts ts =
   ruleHasCorrectFormat r nts ts "left" &&
   individualRulesHaveCorrectFormat rs nts ts
 
+{-|
+  The function checks syntactic and semantic format of a single rule.
+-}
 ruleHasCorrectFormat :: String -> String -> String -> String -> Bool
 ruleHasCorrectFormat (x:xs) nts ts curr
   | curr == "left" && x `elem` nts = ruleHasCorrectFormat xs nts ts "-"
@@ -235,6 +248,9 @@ ruleHasCorrectFormat (x:xs) nts ts curr
   | otherwise = error (determineError curr x)
 ruleHasCorrectFormat [] _ _ _ = undefined
 
+{-|
+  The function determines in which part of the rule the error occured.
+-}
 determineError :: String -> Char -> String
 determineError curr x
   | curr == "left" && x `elem` ['A' .. 'Z'] =
@@ -247,10 +263,10 @@ determineError curr x
     "ERROR: Rules contain non-existing non-terminal '" ++ [x] ++ "'."
   | otherwise = "ERROR: Incorrect format of rule set."
 
-removeChar :: Eq a => a -> [a] -> [a]
+removeChar :: Char -> String -> String
 removeChar c str = concat (mySplitOn c str)
 
-mySplitOn :: Eq a => a -> [a] -> [[a]]
+mySplitOn :: Char -> String -> [String]
 mySplitOn _ [] = []
 mySplitOn delim xs =
   takeWhile (/= delim) xs : mySplitOn delim (safeTail (dropWhile (/= delim) xs))
@@ -288,6 +304,9 @@ convertToRRG rlg =
   where
     (x, y) = splitRLGRules (nonTerminalsRLG rlg) (rulesRLG rlg)
 
+{-|
+  The function splts RLG rules into RRG rules.
+-}
 splitRLGRules :: String -> [(Char, String)] -> ([String], [(String, String)])
 splitRLGRules nonTerminals [] = (map (: []) nonTerminals, [])
 splitRLGRules nonTerminals (rule:rs) =
@@ -312,6 +331,9 @@ splitSingleRLGRule nonTerminals rule =
     then splitSingleRLGNonTerminalRule nonTerminals (snd rule) [fst rule] --nonTerminals names need to be converted to strings
     else splitSingleRLGTerminalRule nonTerminals (snd rule) [fst rule] --nonTerminals names need to be converted to strings
 
+{-|
+  The function splits single RLG rule that ends with non-terminal into RRG rules.
+-}
 splitSingleRLGNonTerminalRule ::
      [String] -> String -> String -> ([String], [(String, String)])
 splitSingleRLGNonTerminalRule nonTerminals ruleRightSide lastNT =
@@ -327,6 +349,9 @@ splitSingleRLGNonTerminalRule nonTerminals ruleRightSide lastNT =
         freeNonTerminal
     freeNonTerminal = getFreeNonTerminal nonTerminals getAllNonTerminalsNames
 
+{-|
+  The function splits single RLG rule that doesnt contain non-terminals into RRG rules.
+-}
 splitSingleRLGTerminalRule ::
      [String] -> String -> String -> ([String], [(String, String)])
 splitSingleRLGTerminalRule nonTerminals ruleRightSide lastNT =
@@ -342,11 +367,17 @@ splitSingleRLGTerminalRule nonTerminals ruleRightSide lastNT =
         freeNonTerminal
     freeNonTerminal = getFreeNonTerminal nonTerminals getAllNonTerminalsNames
 
+{-|
+  The function generates all possible non-terminal names.
+-}
 getAllNonTerminalsNames :: [String]
 getAllNonTerminalsNames =
   [[x] | x <- ['A' .. 'Z']] ++
   [x : show y | y <- [1, 2] :: [Integer], x <- ['A' .. 'Z']]
 
+{-|
+  The function returns next free non-terminal name.
+-}
 getFreeNonTerminal :: Foldable t => t String -> [String] -> String
 getFreeNonTerminal _ [] = "@" --won't happen (just to silence GHC), since the second parameter is infinite array
 getFreeNonTerminal existingNT (possibleNT:nts) =
@@ -366,12 +397,18 @@ convertToNFSM rrg =
         sort (createFinalStates (nonTerminalsRRG rrg) (rulesRRG rrg))
     }
 
-renameNonTerminals :: Eq a => [a] -> [a] -> [Int]
+{-|
+  The function converts non-terminal names into numbers.
+-}
+renameNonTerminals :: [String] -> [String] -> [Int]
 renameNonTerminals _ [] = []
 renameNonTerminals allNonTerminals (nt:nts) =
   fromJust (elemIndex nt allNonTerminals) :
   renameNonTerminals allNonTerminals nts
 
+{-|
+  The function converts RRG rules into NFSM transitions.
+-}
 createTransitions :: [String] -> [(String, String)] -> [(Int, Char, Int)]
 createTransitions _ [] = []
 createTransitions allNonTerminals (r:rs) =
@@ -383,7 +420,10 @@ createTransitions allNonTerminals (r:rs) =
     symbol = head (snd r)
     toState = fromJust $ elemIndex (tail (snd r)) allNonTerminals
 
-createFinalStates :: Eq a => [a] -> [(a, String)] -> [Int]
+{-|
+  The function determines which states are final.
+-}
+createFinalStates :: [String] -> [(String, String)] -> [Int]
 createFinalStates _ [] = []
 createFinalStates allNonTerminals (r:rs) =
   if snd r == "#"
